@@ -1,69 +1,109 @@
 package com.example.lucene;
-
-import java.io.File;
-import java.io.FileReader;
+ 
 import java.io.IOException;
-import org.apache.lucene.analysis.SimpleAnalyzer;
+import java.io.InputStream;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
+ 
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.document.Field.Store;
+import org.apache.lucene.document.LongPoint;
+import org.apache.lucene.document.StringField;
+import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.index.IndexWriterConfig.OpenMode;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
-
+ 
 public class FileIndexer {
+    // Input folder
     private static final String INDEX_DIRECTORY = "resources/index";
+    
+    // Output folder
     private static final String FILES_DIRECTORY = "resources/files";
-    
-    public static void main(String[] args) throws Exception {      
-        File indexDir = new File(INDEX_DIRECTORY);
-        File dataDir = new File(FILES_DIRECTORY);
-        String fileExtension = "txt";        
-        FileIndexer indexer = new FileIndexer();        
-        int numIndex = indexer.index(indexDir, dataDir, fileExtension);        
-        System.out.println("Numer of total files indexed:  " + numIndex);        
-    }
-    
-    private int index(File indexDir, File dataDir, String fileExtension) throws Exception {        
-        IndexWriter indexWriter = new IndexWriter( FSDirectory.open(indexDir), new SimpleAnalyzer(), true, IndexWriter.MaxFieldLength.LIMITED);
-        indexWriter.setUseCompoundFile(false);        
-        indexDirectory(indexWriter, dataDir, fileExtension);        
-        int numIndexed = indexWriter.maxDoc();
-        indexWriter.optimize();
-        indexWriter.close();        
-        return numIndexed;        
-    }
-    
-    private void indexDirectory(IndexWriter indexWriter, File dataDir, String fileExtension) throws IOException {
-        File[] files = dataDir.listFiles();
-        for (int i = 0; i < files.length; i++) {
-            File f = files[i];
-            if (f.isDirectory()) {
-                indexDirectory(indexWriter, f, fileExtension);
-            }
-            else {
-                indexFileWithIndexWriter(indexWriter, f, fileExtension);
-            }
+
+    public static void main(String[] args) {
+        //Input folder
+        String docsPath = FILES_DIRECTORY;
+         
+        //Output folder
+        String indexPath = INDEX_DIRECTORY;
+ 
+        //Input Path Variable
+        final Path docDir = Paths.get(docsPath);
+ 
+        try {
+            //org.apache.lucene.store.Directory instance
+            Directory dir = FSDirectory.open( Paths.get(indexPath) );
+             
+            //analyzer with the default stop words
+            Analyzer analyzer = new StandardAnalyzer();
+             
+            //IndexWriter Configuration
+            IndexWriterConfig iwc = new IndexWriterConfig(analyzer);
+            iwc.setOpenMode(OpenMode.CREATE_OR_APPEND);
+             
+            //IndexWriter writes new index files to the directory
+            IndexWriter writer = new IndexWriter(dir, iwc);
+             
+            //Its recursive method to iterate all files and directories
+            indexDocs(writer, docDir);
+ 
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
-    
-    private void indexFileWithIndexWriter(IndexWriter indexWriter, File f, String fileExtension) throws IOException {
-        if (f.isHidden() || f.isDirectory() || !f.canRead() || !f.exists()) {
-            return;
+     
+    static void indexDocs(final IndexWriter writer, Path path) throws IOException {
+        //Directory?
+        if (Files.isDirectory(path)) {
+            //Iterate directory
+            Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    try {
+                        //Index this file
+                        indexDoc(writer, file, attrs.lastModifiedTime().toMillis());
+                    } catch (IOException ioe) {
+                        ioe.printStackTrace();
+                    }
+                    
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+        } else {
+            //Index this file
+            indexDoc(writer, path, Files.getLastModifiedTime(path).toMillis());
         }
-        
-        // If you want all extensions, instead of just TXT, then you can leave out that parameter. This would change the index,
-        // indexDirectory and indexFileWithIndexWriter constructors to not have the parameter passed in. 
-        // Finally, you would want to remove:
-        
-        if (fileExtension!=null && !f.getName().endsWith(fileExtension)) {
-            return;
+    }
+ 
+    static void indexDoc(IndexWriter writer, Path file, long lastModified) throws IOException {
+        try (InputStream stream = Files.newInputStream(file)) {
+            //Create lucene Document
+            Document doc = new Document();
+            
+            System.out.println(file.toString());
+            System.out.println(new String(Files.readAllBytes(file)));
+
+            doc.add(new StringField("path", file.toString(), Field.Store.YES));
+            doc.add(new LongPoint("modified", lastModified));
+            doc.add(new TextField("contents", new String(Files.readAllBytes(file)), Store.YES));
+             
+            //Updates a document by first deleting the document(s)
+            //containing <code>term</code> and then adding the new
+            //document.  The delete and then add are atomic as seen
+            //by a reader on the same index
+            writer.updateDocument(new Term("path", file.toString()), doc);
         }
-        
-        System.out.println("Indexing file:... " + f.getCanonicalPath());
-        
-        Document doc = new Document();
-        doc.add(new Field("contents", new FileReader(f)));        
-        doc.add(new Field("filename", f.getCanonicalPath(), Field.Store.YES, Field.Index.ANALYZED));
-        
-        indexWriter.addDocument(doc);
     }
 }

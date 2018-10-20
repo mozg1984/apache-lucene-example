@@ -1,45 +1,59 @@
 package com.example.lucene;
-
-import java.io.File;
-
-import org.apache.lucene.util.Version;
-import org.apache.lucene.analysis.SimpleAnalyzer;
+ 
+import java.io.IOException;
+import java.nio.file.Paths;
+ 
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.queryParser.QueryParser;
+import org.apache.lucene.index.DirectoryReader;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
-
-public class Searcher { 
+ 
+public class Searcher {
+    //directory contains the lucene indexes
     private static final String INDEX_DIRECTORY = "resources/index";
-    public static void main(String[] args) throws Exception {       
-        File indexDir = new File(INDEX_DIRECTORY);
-        String query = "three";
-        int hits = 100;
-        
-        Searcher searcher = new Searcher();
-        searcher.searchIndex(indexDir, query, hits);        
-    }
-    
-    private void searchIndex(File indexDir, String queryStr, int maxHits) throws Exception {        
-        Directory directory = FSDirectory.open(indexDir);
-        @SuppressWarnings("deprecation")
-		IndexSearcher searcher = new IndexSearcher(directory);
-        @SuppressWarnings("deprecation")
-		QueryParser parser = new QueryParser(Version.LUCENE_30, "contents", new SimpleAnalyzer());
-        Query query = parser.parse(queryStr);        
-        TopDocs topDocs = searcher.search(query, maxHits);
-        
-        ScoreDoc[] hits = topDocs.scoreDocs;
-        for (int i = 0; i < hits.length; i++) {
-            int docId = hits[i].doc;
-            Document d = searcher.doc(docId);
-            System.out.println(d.get("filename"));
+ 
+    public static void main(String[] args) throws Exception {
+        //Create lucene searcher. It search over a single IndexReader.
+        IndexSearcher searcher = createSearcher();
+         
+        //Search indexed contents using search term
+        TopDocs foundDocs = searchInContent("agreeable", searcher);
+         
+        //Total found documents
+        System.out.println("Total Results :: " + foundDocs.totalHits);
+         
+        //Let's print out the path of files which have searched term
+        for (ScoreDoc sd : foundDocs.scoreDocs) {
+            Document d = searcher.doc(sd.doc);
+            System.out.println("Path : "+ d.get("path") + ", Score : " + sd.score);
         }
-        
-        System.out.println("Found " + hits.length);        
+    }
+     
+    private static TopDocs searchInContent(String textToFind, IndexSearcher searcher) throws Exception {
+        //Create search query
+        QueryParser qp = new QueryParser("contents", new StandardAnalyzer());
+        Query query = qp.parse(textToFind);
+         
+        //search the index
+        TopDocs hits = searcher.search(query, 10);
+        return hits;
+    }
+ 
+    private static IndexSearcher createSearcher() throws IOException {
+        Directory dir = FSDirectory.open(Paths.get(INDEX_DIRECTORY));
+         
+        //It is an interface for accessing a point-in-time view of a lucene index
+        IndexReader reader = DirectoryReader.open(dir);
+         
+        //Index searcher
+        IndexSearcher searcher = new IndexSearcher(reader);
+        return searcher;
     }
 }

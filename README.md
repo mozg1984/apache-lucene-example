@@ -1,19 +1,16 @@
-Simple example maven project of using Apache Lucene search engine.
+##Simple example of maven project of using Apache Lucene search engine.
+###### Taken from Lucene tutorials - https://howtodoinjava.com/lucene/
 
-<!-- Install maven projects -->
-$ mvn clean install
+Install maven projects
+```$ mvn clean install```
 
-<!-- Runs file indexer by content of all files in the resources/files and creates index in the resources/index -->
-$ java -cp target/ApacheLucaneSample-0.0.1-SNAPSHOT.jar com.example.lucene.FileIndexer
-Indexing file:... /home/radik/java-projects/apachelucene/resources/files/file2.txt
-Indexing file:... /home/radik/java-projects/apachelucene/resources/files/file5.txt
-Indexing file:... /home/radik/java-projects/apachelucene/resources/files/file4.txt
-Indexing file:... /home/radik/java-projects/apachelucene/resources/files/file1.txt
-Indexing file:... /home/radik/java-projects/apachelucene/resources/files/file3.txt
-Numer of total files indexed:  5
+Runs file indexer by content of all files in the `resources/files` and creates index in the `resources/index`
+```$ java -cp target/ApacheLucaneSample-0.0.1-SNAPSHOT.jar com.example.lucene.FileIndexer```
 
-<!-- Runs searching of files by index located in the resources/index by query string 'three' -->
+Runs searching of files by index located in the `resources/index` by query string `'agreeable'`
+```
 $ java -cp target/ApacheLucaneSample-0.0.1-SNAPSHOT.jar com.example.lucene.Searcher
-/home/radik/java-projects/apachelucene/resources/files/file2.txt
-/home/radik/java-projects/apachelucene/resources/files/file1.txt
-Found 2
+Total Results :: 2
+Path : resources/files/data3.txt, Score : 0.4808459
+Path : resources/files/data2.txt, Score : 0.41517237
+```
