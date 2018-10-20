@@ -1,4 +1,5 @@
 Simple example of maven project of using Apache Lucene search engine.
+
 [Taken from Lucene tutorials - https://howtodoinjava.com/lucene/]
 
 #### Steps to try it &nbsp; :shipit:
