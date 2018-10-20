@@ -1,5 +1,4 @@
-##Simple example of maven project of using Apache Lucene search engine.
-
+Simple example of maven project of using Apache Lucene search engine.
 ###### Taken from Lucene tutorials - https://howtodoinjava.com/lucene/
 
 Install maven projects
