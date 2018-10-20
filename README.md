@@ -1,14 +1,17 @@
 Simple example of maven project of using Apache Lucene search engine.
-###### Taken from Lucene tutorials - https://howtodoinjava.com/lucene/
+[Taken from Lucene tutorials - https://howtodoinjava.com/lucene/]
 
-Install maven projects
+#### Steps to try it &nbsp; :shipit:
+
+1. Install maven projects
+
 ```$ mvn clean install```
 
-Runs file indexer by content of all files in the `resources/files` and creates index in the `resources/index`
+2. Runs file indexer by content of all files in the `resources/files` and creates index in the `resources/index`
 
 ```$ java -cp target/ApacheLucaneSample-0.0.1-SNAPSHOT.jar com.example.lucene.FileIndexer```
 
-Runs searching of files by index located in the `resources/index` by query string `'agreeable'`
+3. Runs searching of files by index located in the `resources/index` by query string `'agreeable'`
 
 ```
 $ java -cp target/ApacheLucaneSample-0.0.1-SNAPSHOT.jar com.example.lucene.Searcher
