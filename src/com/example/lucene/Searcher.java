@@ -7,13 +7,18 @@ import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.Sort;
+import org.apache.lucene.search.SortField;
+import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.search.SortField.Type;
  
 public class Searcher {
     //directory contains the lucene indexes
@@ -32,16 +37,22 @@ public class Searcher {
         //Let's print out the path of files which have searched term
         for (ScoreDoc sd : foundDocs.scoreDocs) {
             Document d = searcher.doc(sd.doc);
-            System.out.println("Path : "+ d.get("path") + ", Score : " + sd.score);
+            System.out.println("Path : "+ d.get("path") + ", id: " + d.get("id") + ", Score : " + sd.score);
         }
     }
      
     private static TopDocs searchInContent(String textToFind, IndexSearcher searcher) throws Exception {
         //Create search query
-        QueryParser qp = new QueryParser("contents", new StandardAnalyzer());
-        Query query = qp.parse(textToFind);
-         
+        // QueryParser qp = new QueryParser("contents", new StandardAnalyzer());
+        // Query query = qp.parse(textToFind);
+        
+        Term term = new Term("contents", textToFind);
+        TermQuery query = new TermQuery(term);
+        
+        Sort sort = new Sort(SortField.FIELD_SCORE, new SortField("order", Type.INT));
+
         //search the index
+        //TopDocs hits = searcher.search(query, 10, sort, true, true);
         TopDocs hits = searcher.search(query, 10);
         return hits;
     }

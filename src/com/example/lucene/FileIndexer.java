@@ -8,13 +8,16 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
- 
+import java.util.Random;
+
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.Field.Store;
 import org.apache.lucene.document.LongPoint;
+import org.apache.lucene.document.SortedDocValuesField;
+import org.apache.lucene.document.StoredField;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.IndexWriter;
@@ -23,6 +26,7 @@ import org.apache.lucene.index.IndexWriterConfig.OpenMode;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.util.BytesRef;
  
 public class FileIndexer {
     // Input folder
@@ -99,11 +103,17 @@ public class FileIndexer {
             doc.add(new LongPoint("modified", lastModified));
             doc.add(new TextField("contents", new String(Files.readAllBytes(file)), Store.YES));
              
+            int id = new Random().nextInt(5);
+            doc.add(new SortedDocValuesField ("id", new BytesRef(id) ));
+            doc.add(new StoredField("id", id));
+
             //Updates a document by first deleting the document(s)
             //containing <code>term</code> and then adding the new
             //document.  The delete and then add are atomic as seen
             //by a reader on the same index
-            writer.updateDocument(new Term("path", file.toString()), doc);
+            
+            //writer.updateDocument(new Term("path", file.toString()), doc);
+            writer.addDocument(doc);
         }
     }
 }

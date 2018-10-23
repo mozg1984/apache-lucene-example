@@ -16,3 +16,10 @@ Total Results :: 2
 Path : resources/files/data3.txt, Score : 0.4808459
 Path : resources/files/data2.txt, Score : 0.41517237
 ```
+
+http://makble.com/how-to-sort-lucene-search-results
+https://www.tutorialspoint.com/lucene/lucene_sorting.htm
+https://howtodoinjava.com/lucene/lucene-wildcardquery-search-example/
+
+https://www.baeldung.com/lucene-file-search
+https://www.baeldung.com/lucene
