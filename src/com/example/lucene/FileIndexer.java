@@ -13,10 +13,12 @@ import java.util.Random;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.document.DoubleDocValuesField;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.Field.Store;
 import org.apache.lucene.document.LongPoint;
 import org.apache.lucene.document.SortedDocValuesField;
+import org.apache.lucene.document.SortedNumericDocValuesField;
 import org.apache.lucene.document.StoredField;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
@@ -70,42 +72,56 @@ public class FileIndexer {
      
     static void indexDocs(final IndexWriter writer, Path path) throws IOException {
         //Directory?
-        if (Files.isDirectory(path)) {
-            //Iterate directory
-            Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
-                @Override
-                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                    try {
-                        //Index this file
-                        indexDoc(writer, file, attrs.lastModifiedTime().toMillis());
-                    } catch (IOException ioe) {
-                        ioe.printStackTrace();
-                    }
+        // if (Files.isDirectory(path)) {
+        //     //Iterate directory
+        //     Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
+        //         @Override
+        //         public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+        //             try {
+        //                 //Index this file
+        //                 indexDoc(writer, file, attrs.lastModifiedTime().toMillis());
+        //             } catch (IOException ioe) {
+        //                 ioe.printStackTrace();
+        //             }
                     
-                    return FileVisitResult.CONTINUE;
-                }
-            });
-        } else {
-            //Index this file
-            indexDoc(writer, path, Files.getLastModifiedTime(path).toMillis());
-        }
+        //             return FileVisitResult.CONTINUE;
+        //         }
+        //     });
+        // } else {
+        //     //Index this file
+        //     indexDoc(writer, path, Files.getLastModifiedTime(path).toMillis());
+        // }
+
+        indexDoc(writer, Paths.get(FILES_DIRECTORY + "/Biblija.txt"), 0.1);
+        indexDoc(writer, Paths.get(FILES_DIRECTORY + "/Koran.txt"), 0.1);
+        indexDoc(writer, Paths.get(FILES_DIRECTORY + "/WarAndPeace1.txt"), 0.1);
+        indexDoc(writer, Paths.get(FILES_DIRECTORY + "/WarAndPeace2.txt"), 0.1);
+        indexDoc(writer, Paths.get(FILES_DIRECTORY + "/WarAndPeace3.txt"), 0.1);
+        indexDoc(writer, Paths.get(FILES_DIRECTORY + "/WarAndPeace4.txt"), 0.1);
+        indexDoc(writer, Paths.get(FILES_DIRECTORY + "/Garri_Potter_1.txt"), 0.1);
+        indexDoc(writer, Paths.get(FILES_DIRECTORY + "/Garri_Potter_2.txt"), 0.1);
+        indexDoc(writer, Paths.get(FILES_DIRECTORY + "/Chelovek_bez_svojstv_1.txt"), 0.1);
+        indexDoc(writer, Paths.get(FILES_DIRECTORY + "/Chelovek_bez_svojstv_2.txt"), 0.1);
     }
  
-    static void indexDoc(IndexWriter writer, Path file, long lastModified) throws IOException {
+    static void indexDoc(IndexWriter writer, Path file, double freq) throws IOException {
         try (InputStream stream = Files.newInputStream(file)) {
             //Create lucene Document
             Document doc = new Document();
             
             System.out.println(file.toString());
-            System.out.println(new String(Files.readAllBytes(file)));
+            //System.out.println(new String(Files.readAllBytes(file)));
 
             doc.add(new StringField("path", file.toString(), Field.Store.YES));
-            doc.add(new LongPoint("modified", lastModified));
+            //doc.add(new LongPoint("modified", lastModified));
             doc.add(new TextField("contents", new String(Files.readAllBytes(file)), Store.YES));
              
-            int id = new Random().nextInt(5);
-            doc.add(new SortedDocValuesField ("id", new BytesRef(id) ));
-            doc.add(new StoredField("id", id));
+            //doc.add (new Field ("byNumber", Integer.toString(freq), Field.Store.NO, Field.Index.NOT_ANALYZED));
+
+            //doc.add(new SortedDocValuesField("freq", new BytesRef(freq)));
+            //doc.add(new DoubleDocValuesField("freq", freq));
+            
+            //doc.add(new StoredField("freq", freq));
 
             //Updates a document by first deleting the document(s)
             //containing <code>term</code> and then adding the new

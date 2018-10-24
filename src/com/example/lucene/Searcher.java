@@ -29,7 +29,7 @@ public class Searcher {
         IndexSearcher searcher = createSearcher();
          
         //Search indexed contents using search term
-        TopDocs foundDocs = searchInContent("agreeable", searcher);
+        TopDocs foundDocs = searchInContent("когда", searcher);
          
         //Total found documents
         System.out.println("Total Results :: " + foundDocs.totalHits);
@@ -37,7 +37,7 @@ public class Searcher {
         //Let's print out the path of files which have searched term
         for (ScoreDoc sd : foundDocs.scoreDocs) {
             Document d = searcher.doc(sd.doc);
-            System.out.println("Path : "+ d.get("path") + ", id: " + d.get("id") + ", Score : " + sd.score);
+            System.out.println("Path : "+ d.get("path") + ", freq: " + d.get("freq") + ", Score : " + sd.score);
         }
     }
      
@@ -48,12 +48,16 @@ public class Searcher {
         
         Term term = new Term("contents", textToFind);
         TermQuery query = new TermQuery(term);
-        
-        Sort sort = new Sort(SortField.FIELD_SCORE, new SortField("order", Type.INT));
 
         //search the index
+        //TopDocs hits = searcher.search(query, 10);
+
         //TopDocs hits = searcher.search(query, 10, sort, true, true);
-        TopDocs hits = searcher.search(query, 10);
+        //TopDocs hits = searcher.search(query, 10, new Sort(new SortField("freq", SortField.Type.STRING)));
+        
+        //TopDocs hits = searcher.search(query, 10, new Sort(new SortField("freq", SortField.Type.STRING)), true, true);
+        TopDocs hits = searcher.search(query, 10, new Sort(new SortField("freq", SortField.Type.DOUBLE)), true, true);
+
         return hits;
     }
  
